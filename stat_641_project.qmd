@@ -95,6 +95,7 @@ cat("The p value for the test statistic using welch two sample t-test",t_test_re
 cat("\nThe 95% values of mean difference in weights lies in the range of",t_test_result$conf.int)
 ```
 ```{r}
+
 set.seed(123)
 mean_ratio_boot <- function(data, index) {
   female_data <- data[index,] |> filter(sex == "F")
@@ -102,8 +103,8 @@ mean_ratio_boot <- function(data, index) {
   
   tot_mean <- mean(data$whole_weight[index])  # Calculating the total mean
   
-  f_diff <- mean(female_data$whole_weight) - tot_mean  # Difference for females
-  m_diff <- mean(male_data$whole_weight) - tot_mean  # Difference for males
+  f_diff <- mean(female_data$whole_weight)  # Difference for females
+  m_diff <- mean(male_data$whole_weight)  # Difference for males
   
   se_f <- sd(female_data$whole_weight) / sqrt(nrow(female_data))  # Standard error for females
   se_m <- sd(male_data$whole_weight) / sqrt(nrow(male_data))  # Standard error for males
@@ -119,12 +120,13 @@ mean_ratio_result <- boot(data = df_males_females,
                           statistic = mean_ratio_boot, 
                           R = 2000)
 mean_ratio_result
+
 hist(mean_ratio_result$t)
 ```
 ```{r}
 set.seed(123)
 boot.ci(mean_ratio_result,type = "perc")
 ```
-
+Since the 
 
 
