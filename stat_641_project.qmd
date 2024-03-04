@@ -1,0 +1,130 @@
+---
+title: "Stat-641-project"
+author: "Vikas Reddy Bodireddy"
+format: html
+editor: visual
+---
+
+## Quarto
+
+```{r}
+library(pacman)
+p_load(tidyverse, boot, knitr, readr)
+```
+
+```{r}
+abalone <- read_csv("~/Desktop/Stat 641/Stat-641-project/abalone.csv")
+```
+
+```{r}
+head(abalone)
+#summary(abalone)
+abalone <- abalone %>%
+  mutate(
+    sex = factor(Sex, levels = c("M", "F", "I")),  # Convert 'sex' to factor with 3 levels
+    sex_numeric = as.numeric(sex)  # Convert factor to numeric
+  )
+summary(abalone)
+```
+
+```{r}
+abalone2 <- abalone %>%
+  select(-c(Sex, sex))
+library(corrplot)
+
+# Calculate correlation matrix for abalone2
+correlation_matrix <- cor(abalone2)
+
+# Plot correlation matrix
+corrplot(correlation_matrix, method = c("number"))
+```
+
+```{r}
+abalone3 <- abalone2 %>%
+  mutate(age = Rings + 1.5)
+
+# Display the first few rows of the modified dataset
+head(abalone2)
+```
+
+```{r}
+library(tidyverse)
+library(boot)
+library(janitor)
+library(knitr)
+dat<-abalone
+dat<-dat %>% 
+  clean_names()
+dat
+df_males_females<-dat %>% 
+  select(sex,whole_weight) %>% 
+  filter(sex%in% c("F", "M"))
+df_males_females
+
+```
+
+```{r}
+
+males <- df_males_females|>
+  filter(df_males_females$sex == "M")
+females <- df_males_females|>
+  filter(df_males_females$sex == "F")
+length(males$sex)
+test_stat <- mean(females$whole_weight) - mean(males$whole_weight)
+```
+
+```{r}
+test_stat <- mean(df_males_females$whole_weight[df_males_females$sex == "F"]) - mean(df_males_females$whole_weight[df_males_females$sex == "M"])
+
+test_stat 
+
+```
+
+```{r}
+
+t_test_result <- t.test(whole_weight ~ sex, data = df_males_females)
+t_test_result
+
+```
+```{r}
+cat("We can also see that the test statistic calculated using t.test",t_test_result$statistic, " is greater than the observed test statistic", test_stat)
+```
+
+```{r}
+cat("The p value for the test statistic using welch two sample t-test",t_test_result$p.value, "which is < 0.05, so we reject the null hypothesis and say that there is difference in the means of the data")
+cat("\nThe 95% values of mean difference in weights lies in the range of",t_test_result$conf.int)
+```
+```{r}
+set.seed(123)
+mean_ratio_boot <- function(data, index) {
+  female_data <- data[index,] |> filter(sex == "F")
+  male_data <- data[index,] |> filter(sex == "M")
+  
+  tot_mean <- mean(data$whole_weight[index])  # Calculating the total mean
+  
+  f_diff <- mean(female_data$whole_weight) - tot_mean  # Difference for females
+  m_diff <- mean(male_data$whole_weight) - tot_mean  # Difference for males
+  
+  se_f <- sd(female_data$whole_weight) / sqrt(nrow(female_data))  # Standard error for females
+  se_m <- sd(male_data$whole_weight) / sqrt(nrow(male_data))  # Standard error for males
+  
+  # Calculate the test statistic
+  test_stat <- (f_diff - m_diff) / sqrt(se_f^2 + se_m^2)
+  
+  return(test_stat)
+}
+
+# Using the bootstrap function with the modified statistic
+mean_ratio_result <- boot(data = df_males_females, 
+                          statistic = mean_ratio_boot, 
+                          R = 2000)
+mean_ratio_result
+hist(mean_ratio_result$t)
+```
+```{r}
+set.seed(123)
+boot.ci(mean_ratio_result,type = "perc")
+```
+
+
+
