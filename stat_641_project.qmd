@@ -126,6 +126,8 @@ hist(mean_ratio_result$t)
 ```{r}
 set.seed(123)
 boot.ci(mean_ratio_result,type = "perc")
+qqnorm(mean)
+qqline(boot.t2)
 ```
 Since the 
 

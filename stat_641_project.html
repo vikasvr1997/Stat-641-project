@@ -318,8 +318,8 @@ The 95% values of mean difference in weights lies in the range of 0.02187753 0.0
 <span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  tot_mean <span class="ot">&lt;-</span> <span class="fu">mean</span>(data<span class="sc">$</span>whole_weight[index])  <span class="co"># Calculating the total mean</span></span>
 <span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  f_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(female_data<span class="sc">$</span>whole_weight) <span class="sc">-</span> tot_mean  <span class="co"># Difference for females</span></span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  m_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(male_data<span class="sc">$</span>whole_weight) <span class="sc">-</span> tot_mean  <span class="co"># Difference for males</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  f_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(female_data<span class="sc">$</span>whole_weight)  <span class="co"># Difference for females</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  m_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(male_data<span class="sc">$</span>whole_weight)  <span class="co"># Difference for males</span></span>
 <span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  se_f <span class="ot">&lt;-</span> <span class="fu">sd</span>(female_data<span class="sc">$</span>whole_weight) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">nrow</span>(female_data))  <span class="co"># Standard error for females</span></span>
 <span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>  se_m <span class="ot">&lt;-</span> <span class="fu">sd</span>(male_data<span class="sc">$</span>whole_weight) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">nrow</span>(male_data))  <span class="co"># Standard error for males</span></span>
@@ -369,6 +369,7 @@ Level     Percentile
 Calculations and Intervals on Original Scale</code></pre>
 </div>
 </div>
+<p>Since the</p>
 </section>
 
 </main>
