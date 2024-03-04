@@ -310,6 +310,65 @@ mean in group F mean in group M
 The 95% values of mean difference in weights lies in the range of 0.02187753 0.08826789</code></pre>
 </div>
 </div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>mean_ratio_boot <span class="ot">&lt;-</span> <span class="cf">function</span>(data, index) {</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  female_data <span class="ot">&lt;-</span> data[index,] <span class="sc">|&gt;</span> <span class="fu">filter</span>(sex <span class="sc">==</span> <span class="st">"F"</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  male_data <span class="ot">&lt;-</span> data[index,] <span class="sc">|&gt;</span> <span class="fu">filter</span>(sex <span class="sc">==</span> <span class="st">"M"</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  tot_mean <span class="ot">&lt;-</span> <span class="fu">mean</span>(data<span class="sc">$</span>whole_weight[index])  <span class="co"># Calculating the total mean</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  f_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(female_data<span class="sc">$</span>whole_weight) <span class="sc">-</span> tot_mean  <span class="co"># Difference for females</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  m_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(male_data<span class="sc">$</span>whole_weight) <span class="sc">-</span> tot_mean  <span class="co"># Difference for males</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  se_f <span class="ot">&lt;-</span> <span class="fu">sd</span>(female_data<span class="sc">$</span>whole_weight) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">nrow</span>(female_data))  <span class="co"># Standard error for females</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>  se_m <span class="ot">&lt;-</span> <span class="fu">sd</span>(male_data<span class="sc">$</span>whole_weight) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">nrow</span>(male_data))  <span class="co"># Standard error for males</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the test statistic</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>  test_stat <span class="ot">&lt;-</span> (f_diff <span class="sc">-</span> m_diff) <span class="sc">/</span> <span class="fu">sqrt</span>(se_f<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> se_m<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(test_stat)</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Using the bootstrap function with the modified statistic</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>mean_ratio_result <span class="ot">&lt;-</span> <span class="fu">boot</span>(<span class="at">data =</span> df_males_females, </span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>                          <span class="at">statistic =</span> mean_ratio_boot, </span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>                          <span class="at">R =</span> <span class="dv">2000</span>)</span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>mean_ratio_result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ORDINARY NONPARAMETRIC BOOTSTRAP
+
+
+Call:
+boot(data = df_males_females, statistic = mean_ratio_boot, R = 2000)
+
+
+Bootstrap Statistics :
+    original      bias    std. error
+t1* 3.253089 0.001907141    1.003776</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(mean_ratio_result<span class="sc">$</span>t)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="stat_641_project_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(mean_ratio_result,<span class="at">type =</span> <span class="st">"perc"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 2000 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = mean_ratio_result, type = "perc")
+
+Intervals : 
+Level     Percentile     
+95%   ( 1.269,  5.238 )  
+Calculations and Intervals on Original Scale</code></pre>
+</div>
+</div>
 </section>
 
 </main>
