@@ -1,0 +1,236 @@
+---
+title: "Stat-641-project"
+author: "Group 8"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+## Quarto
+
+```{r warning=FALSE, message=FALSE}
+library(pacman)
+p_load(tidyverse, boot)
+```
+
+```{r warning=FALSE, message=FALSE}
+abalone <- read_csv("abalone.csv")
+head(abalone)
+```
+
+```{r}
+par(mfrow = c(2,2))
+
+hist(abalone$Length)
+
+hist(abalone$Diameter)
+
+hist(abalone$Height) # skew!
+
+hist(abalone$'Shucked weight')
+
+hist(abalone$'Viscera weight')
+
+hist(abalone$'Shell weight')
+
+hist(abalone$'Rings')
+
+hist(abalone$'Whole weight') # interesting
+```
+
+```{r}
+table(abalone$Sex)
+```
+
+```{r}
+# Extracting male and female by removing rows with "Sex = I"
+abalone2 <- abalone |> 
+  filter(Sex != "I") 
+```
+
+```{r}
+hist(abalone$'Whole weight',
+     main = "Histogram for Whole weight distribution",
+     xlab = "Whole weight",
+     col = rainbow(15)) # interesting
+abalone2$Sex <- as.factor(abalone2$Sex)
+plot( abalone2$Sex, abalone2$`Whole weight`,
+      col = rainbow(2),
+      xlab = "Sex",
+      ylab = "Whole weight",
+      main = "Boxplot for abalone Whole Weight according to Sex")
+```
+
+```{r}
+set.seed(101)
+#total observations
+length_Ww <-length(abalone2$`Whole weight`)
+
+# Extracting Whole Weight of Males in vector
+male_w <- abalone2$`Whole weight`[abalone2$Sex == "M"]
+# Extracting Whole Weight of Females in a vector
+female_w <- abalone2$`Whole weight`[abalone2$Sex == "F"]
+
+# Mean of Male abalone's weight
+male_mean <- mean(male_w)
+# Mean of Female abalone's weight
+female_mean <- mean(female_w)
+# Mean of all observed values
+Ww_mean <- mean(abalone2$`Whole weight`)
+
+# Total number of Males on observation
+length_m <- length(male_w)
+# Total number of Female on observation
+length_f <- length(female_w)
+```
+
+```{r}
+# Test statistics for Two Sample t-test
+test_stat <- female_mean - male_mean
+test_stat
+```
+
+```{r}
+# Students t test with equal variance assumptions
+t_test_result <- t.test(`Whole weight` ~ Sex, data = abalone2)
+t_test_result
+```
+
+```{r, echo =FALSE}
+cat("We can also see that the test statistic calculated using t.test",t_test_result$statistic, " is greater than the observed test statistic", test_stat)
+```
+
+```{r, echo =FALSE}
+cat("The p value for the test statistic using two sample t-test",t_test_result$p.value, "which is < 0.05, so we reject the null hypothesis and say that there is difference in the means of the data\n")
+cat("\nThe 95% values of mean difference in weights lies in the range of",t_test_result$conf.int)
+```
+
+# Bootstrap Hypothesis Testing
+
+```{r}
+# Studentized test statistic
+t_obs <- (female_mean - male_mean)/sqrt(var(female_w)/length_f + var(male_w)/length_m)
+```
+
+```{r}
+# Creating new column for bootstrap
+abalone2$Whole_weight <- abalone2$`Whole weight`
+
+# Computation of the bootstrap test statistic for testing equality of means.
+# Algorithm 16.2 in "Introduction-to-the-Bootstrap" by "Efron and Tibshirani"
+for (i in 1:length_Ww) {
+  if(abalone2$Sex[i] == "M")
+{
+abalone2$Whole_weight[i] <- abalone2$`Whole weight`[i] - male_mean + Ww_mean
+}else
+abalone2$Whole_weight[i] <- abalone2$`Whole weight`[i] - female_mean + Ww_mean
+}
+```
+
+```{r}
+set.seed(101)
+# Defining function for using boot function for boot library
+mean_ratio_boot <- function(data, index) {
+  sample_data <- data[index,]
+  
+  f_sample <- sample_data$Whole_weight[sample_data$Sex == "F"]
+  m_sample <- sample_data$Whole_weight[sample_data$Sex == "M"]
+  
+  mean_f_sample <- mean(f_sample)
+  mean_m_sample <- mean(m_sample)
+  
+  se_f_sample <- var(f_sample)/length_f
+  se_m_sample <- var(m_sample)/length_m
+  
+  boot_t <- (mean_f_sample - mean_m_sample)/sqrt(se_f_sample + se_m_sample)
+
+  return(boot_t)
+}
+
+# Converting sex column to charactor
+abalone2$Sex <- as.character(abalone2$Sex)
+
+# Bootstraping using boot function
+mean_ratio_result <- boot(data = abalone2, 
+                          statistic = mean_ratio_boot, 
+                          R = 2000)
+result_3 <- as.numeric(2000)
+
+# The mean test statistic obtained using bootstrap distribution
+abs(mean(mean_ratio_result$t))
+cat("\nThe mean test statistic obtained by using bootstraping is", round(abs(mean(mean_ratio_result$t)),4),"\n")
+
+
+# Plot histogram
+hist(mean_ratio_result$t, xlab = "Bootstrap T distribution")
+# Add vertical line for t_obs
+abline(v = t_obs, col = "orangered")
+mean_ratio_result
+
+boot.ci(mean_ratio_result, type = "perc")
+```
+
+```{r}
+hist(mean_ratio_result$t, breaks = 40,
+     main = "Histogram of Bootstrap Distribution\nUnder H_0",
+     xlab = "Equality of means")
+abline(v = t_obs, col = "red")
+```
+
+```{r}
+# bootsrap diagnostics
+qqnorm(mean_ratio_result$t)
+qqline(mean_ratio_result$t)
+```
+
+```{r, echo =FALSE}
+cat("\nThe 95% CI for Bootstrap test tatestics values lies in the range of",quantile(mean_ratio_result$t, c(0.025, 0.975)))
+```
+
+```{r}
+# Extracting Whole Weight (modified as bootstrap test statistic ) of Males in vector 
+male_w_bt <- abalone2$Whole_weight[abalone2$Sex == "M"]
+female_w_bt <- abalone2$Whole_weight[abalone2$Sex == "F"]
+```
+
+```{r}
+set.seed(101)
+### Another way that more explicitley defines the steps ###
+# for the ASL
+# number of absolute values of boot.t2 greater than t_obs
+# divided by MC
+boot.t2 <- c()
+boot.t3 <- c()
+MC <- 2000
+for(i in 1:MC) {
+  sample_m <- sample(male_w_bt, replace = TRUE)
+  sample_f <- sample(female_w_bt, replace = TRUE)
+  mean_sample_m <- mean(sample_m)
+  mean_sample_f <- mean(sample_f)
+  se_sample_m <- var(sample_m)/length_m
+  se_sample_f <- var(sample_f)/length_f
+  boot.t2[i] <- (mean_sample_f - mean_sample_m)/sqrt(se_sample_m + se_sample_f)
+  boot.t3[i] <- isTRUE(abs(boot.t2[i]) >= abs(t_obs))
+}
+
+ASL_boot <- sum(boot.t3)/length(boot.t3)
+ASL_boot
+```
+
+```{r}
+# for the ASL
+hist(boot.t2, breaks = 40,
+     main = "Histogram of Bootstrap Distribution\nUnder H_0",
+     xlab = "Equality of means")
+abline(v = t_obs, col = "red")
+```
+
+```{r}
+qqnorm(boot.t2)
+qqline(boot.t2)
+```
+
+```{r, echo =FALSE}
+cat("\nThe 95% CI for Bootstrap test tatestics values lies in the range of",quantile(boot.t2, c(0.025, 0.975)))
+```
